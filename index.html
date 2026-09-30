@@ -1,0 +1,1256 @@
+<!DOCTYPE html>
+<html lang="en" class="dark scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SKYXOSTORE — Premium Digital Game Marketplace</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        skyxo: {
+                            black: '#050607',
+                            dark: '#0A1112',
+                            card: '#0D1517',
+                            border: '#1E2C2F',
+                            aqua: '#2CDA9D',
+                            aquaMuted: '#1A6852',
+                            champagne: '#DFBA73',
+                            goldMuted: '#8E7341',
+                            textMuted: '#8A999E'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Three.js CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #050607;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1E2C2F;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #2CDA9D;
+        }
+        .glass-card {
+            background: linear-gradient(135deg, rgba(13, 21, 23, 0.85) 0%, rgba(8, 13, 14, 0.95) 100%);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 24px;
+        }
+        .glass-card:hover {
+            border-color: rgba(44, 218, 157, 0.3);
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.8);
+        }
+        .glass-nav {
+            background: rgba(5, 6, 7, 0.75);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .gold-glow {
+            text-shadow: 0 0 12px rgba(223, 186, 115, 0.25);
+        }
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="bg-[#050607] text-gray-100 font-sans selection:bg-skyxo-aqua selection:text-black overflow-x-hidden">
+
+    <!-- 3D INTRO LOADING SCREEN -->
+    <div id="intro-container" class="fixed inset-0 z-[100] bg-[#050607] flex flex-col items-center justify-center transition-opacity duration-1000">
+        <canvas id="three-canvas" class="absolute inset-0 w-full h-full"></canvas>
+        
+        <div class="relative z-10 text-center px-6 pointer-events-none">
+            <div class="mb-6 inline-flex flex-col items-center">
+                <div class="text-xs uppercase tracking-[0.4em] text-skyxo-champagne font-semibold mb-2 gold-glow">Skyxo Marketplace</div>
+                <div class="text-4xl md:text-6xl font-black tracking-tight text-white flex items-center gap-2">
+                    SKYXO<span class="text-skyxo-aqua font-light">STORE</span>
+                </div>
+            </div>
+
+            <div class="max-w-md w-full mx-auto bg-black/40 p-4 rounded-2xl border border-white/5 backdrop-blur-md">
+                <div id="loading-status" class="text-xs tracking-widest text-skyxo-textMuted uppercase font-medium mb-3">INITIALIZING SKYXOSTORE</div>
+                <div class="w-full bg-white/10 h-1.5 rounded-full overflow-hidden">
+                    <div id="progress-bar" class="bg-gradient-to-r from-skyxo-aquaMuted via-skyxo-aqua to-skyxo-champagne h-full w-0 transition-all duration-300"></div>
+                </div>
+                <div class="flex justify-between items-center mt-2 text-[10px] text-gray-400 font-mono">
+                    <span>v2.6 PREMIUM ENGINE</span>
+                    <span id="progress-text">0%</span>
+                </div>
+            </div>
+        </div>
+
+        <button id="skip-intro-btn" onclick="finishIntro()" class="absolute bottom-8 right-8 z-20 text-xs tracking-wider uppercase text-gray-400 hover:text-white border border-white/10 hover:border-skyxo-aqua/40 bg-black/50 backdrop-blur-md px-5 py-2.5 rounded-full transition-all duration-300">
+            Skip Intro <i class="fa-solid fa-arrow-right ml-1 text-[10px]"></i>
+        </button>
+    </div>
+
+    <!-- MAIN SITE CONTAINER -->
+    <div id="main-content" class="opacity-0 transition-opacity duration-1000 min-h-screen flex flex-col">
+
+        <!-- GLOBAL STICKY NAVBAR -->
+        <header id="navbar" class="sticky top-0 z-50 glass-nav transition-all duration-300">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-4">
+                
+                <!-- Logo -->
+                <a href="#" class="flex items-center gap-3 group">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-skyxo-dark to-skyxo-black border border-skyxo-aqua/30 flex items-center justify-center font-black text-skyxo-aqua text-lg group-hover:border-skyxo-aqua transition-colors shadow-lg">
+                        S
+                    </div>
+                    <div class="flex flex-col">
+                        <span class="text-lg font-black tracking-wider text-white leading-none">SKYXO</span>
+                        <span class="text-[10px] tracking-[0.3em] text-skyxo-textMuted font-bold leading-tight">STORE</span>
+                    </div>
+                </a>
+
+                <!-- Desktop Nav Links -->
+                <nav class="hidden md:flex items-center gap-8 text-xs font-semibold uppercase tracking-wider text-gray-300">
+                    <a href="#discover" class="hover:text-skyxo-aqua transition-colors">Discover</a>
+                    <a href="#games" class="hover:text-skyxo-aqua transition-colors">Games</a>
+                    <a href="#deals" class="hover:text-skyxo-aqua transition-colors">Deals</a>
+                    <a href="#collections" class="hover:text-skyxo-aqua transition-colors">Collections</a>
+                    <a href="#domains" class="hover:text-skyxo-aqua transition-colors">Domains</a>
+                </nav>
+
+                <!-- Actions -->
+                <div class="flex items-center gap-3">
+                    <button onclick="toggleSearchModal()" class="w-10 h-10 rounded-full bg-white/5 border border-white/10 hover:border-skyxo-aqua/50 flex items-center justify-center text-gray-300 hover:text-white transition-all">
+                        <i class="fa-solid fa-magnifying-glass text-xs"></i>
+                    </button>
+
+                    <button onclick="toggleWishlistDrawer()" class="relative w-10 h-10 rounded-full bg-white/5 border border-white/10 hover:border-skyxo-aqua/50 flex items-center justify-center text-gray-300 hover:text-white transition-all">
+                        <i class="fa-solid fa-heart text-xs"></i>
+                        <span id="wishlist-badge" class="absolute -top-1 -right-1 w-4 h-4 bg-skyxo-champagne text-black font-bold text-[9px] rounded-full flex items-center justify-center hidden">0</span>
+                    </button>
+
+                    <button onclick="toggleCartDrawer()" class="relative w-10 h-10 rounded-full bg-white/5 border border-white/10 hover:border-skyxo-aqua/50 flex items-center justify-center text-gray-300 hover:text-white transition-all">
+                        <i class="fa-solid fa-bag-shopping text-xs"></i>
+                        <span id="cart-badge" class="absolute -top-1 -right-1 w-4 h-4 bg-skyxo-aqua text-black font-bold text-[9px] rounded-full flex items-center justify-center hidden">0</span>
+                    </button>
+
+                    <button onclick="openModal('account-modal')" class="hidden sm:flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-semibold text-gray-200 hover:text-white transition-all">
+                        <i class="fa-regular fa-user text-skyxo-aqua"></i> Account
+                    </button>
+
+                    <!-- Mobile Menu Button -->
+                    <button onclick="toggleMobileMenu()" class="md:hidden w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-gray-300">
+                        <i class="fa-solid fa-bars text-sm"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Mobile Nav Menu Drawer -->
+            <div id="mobile-menu" class="hidden md:hidden border-t border-white/5 bg-[#050607]/95 px-6 py-4 flex flex-col gap-3 text-xs uppercase font-semibold">
+                <a href="#discover" onclick="toggleMobileMenu()" class="py-2 hover:text-skyxo-aqua">Discover</a>
+                <a href="#games" onclick="toggleMobileMenu()" class="py-2 hover:text-skyxo-aqua">Games</a>
+                <a href="#deals" onclick="toggleMobileMenu()" class="py-2 hover:text-skyxo-aqua">Deals</a>
+                <a href="#collections" onclick="toggleMobileMenu()" class="py-2 hover:text-skyxo-aqua">Collections</a>
+                <a href="#domains" onclick="toggleMobileMenu()" class="py-2 hover:text-skyxo-aqua">Domains</a>
+                <button onclick="toggleMobileMenu(); openModal('account-modal')" class="py-2 text-left text-skyxo-aqua flex items-center gap-2">
+                    <i class="fa-regular fa-user"></i> Account Profile
+                </button>
+            </div>
+        </header>
+
+        <!-- HERO SECTION -->
+        <section id="discover" class="relative min-h-[85vh] flex items-center pt-8 pb-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
+            <!-- Background Image Container -->
+            <div class="absolute inset-0 mx-4 sm:mx-6 lg:mx-8 rounded-[32px] overflow-hidden border border-white/10 z-0">
+                <img src="https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=2070&auto=format&fit=crop" alt="Hero Game" class="w-full h-full object-cover object-center scale-105 filter brightness-75">
+                <div class="absolute inset-0 bg-gradient-to-r from-[#050607] via-[#050607]/80 to-transparent"></div>
+                <div class="absolute inset-0 bg-gradient-to-t from-[#050607] via-transparent to-transparent"></div>
+            </div>
+
+            <div class="relative z-10 max-w-2xl px-6 lg:px-12 py-12">
+                <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 border border-white/10 backdrop-blur-md mb-6">
+                    <span class="w-2 h-2 rounded-full bg-skyxo-aqua animate-pulse"></span>
+                    <span class="text-[11px] font-semibold uppercase tracking-widest text-skyxo-aqua">Next-Gen Marketplace</span>
+                </div>
+
+                <h1 class="text-4xl sm:text-6xl font-black text-white tracking-tight leading-none mb-6">
+                    YOUR NEXT GAME <br><span class="text-transparent bg-clip-text bg-gradient-to-r from-skyxo-aqua via-white to-skyxo-champagne">STARTS HERE.</span>
+                </h1>
+
+                <p class="text-sm sm:text-base text-gray-300 leading-relaxed mb-8 max-w-xl">
+                    Discover a curated collection of games across PC, console, and digital platforms — all in one premium marketplace with instant digital key delivery.
+                </p>
+
+                <div class="flex flex-wrap gap-4 items-center">
+                    <a href="#games" class="px-8 py-4 rounded-2xl bg-skyxo-aqua hover:bg-emerald-400 text-black font-bold text-xs uppercase tracking-wider transition-all transform hover:-translate-y-0.5 shadow-lg shadow-skyxo-aqua/20 flex items-center gap-2">
+                        Explore Games <i class="fa-solid fa-arrow-down"></i>
+                    </a>
+                    <a href="#deals" class="px-8 py-4 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/15 text-white font-bold text-xs uppercase tracking-wider transition-all backdrop-blur-md flex items-center gap-2">
+                        View Deals <i class="fa-solid fa-tag text-skyxo-champagne"></i>
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- FEATURED GAME SECTION -->
+        <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 w-full">
+            <div class="glass-card p-6 sm:p-8 lg:p-10 relative overflow-hidden">
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+                    <div class="lg:col-span-7 relative group rounded-2xl overflow-hidden border border-white/10 aspect-video">
+                        <img src="https://images.unsplash.com/photo-1511512578047-dfb367046420?q=80&w=1200&auto=format&fit=crop" alt="Cyberfall" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105">
+                        <div class="absolute top-4 left-4 bg-skyxo-champagne text-black text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full shadow-md">
+                            LIMITED OFFER
+                        </div>
+                    </div>
+
+                    <div class="lg:col-span-5 flex flex-col justify-center">
+                        <div class="flex items-center gap-2 text-xs font-semibold text-skyxo-textMuted uppercase mb-2">
+                            <span>Action</span> • <span>PC</span> • <span>4K Ultra HD</span>
+                        </div>
+
+                        <h2 class="text-3xl sm:text-4xl font-extrabold text-white mb-3">CYBERFALL</h2>
+
+                        <p class="text-xs sm:text-sm text-gray-300 leading-relaxed mb-6">
+                            Enter the neon-drenched metropolis of Neo-Veridia. Unleash high-octane cybernetic capabilities in a next-generation open world action RPG.
+                        </p>
+
+                        <div class="flex items-baseline gap-3 mb-6">
+                            <span class="text-3xl font-black text-white">₹2,499</span>
+                            <span class="text-base text-gray-500 line-through">₹3,499</span>
+                            <span class="text-xs font-bold text-skyxo-aqua bg-skyxo-aqua/10 px-2.5 py-1 rounded-md border border-skyxo-aqua/20">-28%</span>
+                        </div>
+
+                        <div class="flex items-center gap-3">
+                            <button onclick="openGameDetail(0)" class="flex-1 px-6 py-3.5 rounded-xl bg-white text-black font-extrabold text-xs uppercase tracking-wider hover:bg-gray-200 transition-all text-center">
+                                View Game Details
+                            </button>
+                            <button onclick="addToCart(0)" class="w-12 h-12 rounded-xl bg-white/5 border border-white/10 hover:border-skyxo-aqua hover:text-skyxo-aqua flex items-center justify-center text-white transition-all">
+                                <i class="fa-solid fa-cart-plus"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CATEGORIES FILTER -->
+        <section id="categories" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 w-full">
+            <div class="flex items-center gap-3 overflow-x-auto no-scrollbar py-2">
+                <button onclick="filterByCategory('ALL')" class="category-btn active px-6 py-2.5 rounded-xl border border-skyxo-aqua bg-skyxo-aqua/10 text-skyxo-aqua font-bold text-xs uppercase tracking-wider shrink-0 transition-all">
+                    ALL GAMES
+                </button>
+                <button onclick="filterByCategory('STEAM')" class="category-btn px-6 py-2.5 rounded-xl border border-white/10 bg-white/5 hover:border-white/30 text-gray-300 font-bold text-xs uppercase tracking-wider shrink-0 transition-all">
+                    STEAM GAMES
+                </button>
+                <button onclick="filterByCategory('PC')" class="category-btn px-6 py-2.5 rounded-xl border border-white/10 bg-white/5 hover:border-white/30 text-gray-300 font-bold text-xs uppercase tracking-wider shrink-0 transition-all">
+                    PC GAMES
+                </button>
+                <button onclick="filterByCategory('XBOX')" class="category-btn px-6 py-2.5 rounded-xl border border-white/10 bg-white/5 hover:border-white/30 text-gray-300 font-bold text-xs uppercase tracking-wider shrink-0 transition-all">
+                    XBOX GAMES
+                </button>
+                <button onclick="filterByCategory('PS')" class="category-btn px-6 py-2.5 rounded-xl border border-white/10 bg-white/5 hover:border-white/30 text-gray-300 font-bold text-xs uppercase tracking-wider shrink-0 transition-all">
+                    PS GAMES
+                </button>
+                <button onclick="filterByCategory('SANDBOX')" class="category-btn px-6 py-2.5 rounded-xl border border-white/10 bg-white/5 hover:border-white/30 text-gray-300 font-bold text-xs uppercase tracking-wider shrink-0 transition-all">
+                    SANDBOX GAMES
+                </button>
+            </div>
+        </section>
+
+        <!-- MAIN GAME CATALOGUE SECTION -->
+        <section id="games" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+            
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+                <div>
+                    <h2 class="text-2xl sm:text-3xl font-black text-white tracking-tight">EXPLORE THE COLLECTION</h2>
+                    <p class="text-xs text-skyxo-textMuted mt-1">Discover titles curated for gaming enthusiasts</p>
+                </div>
+
+                <!-- Sort & Filter Dropdown Controls -->
+                <div class="flex items-center gap-3">
+                    <select id="sort-select" onchange="applySortAndFilter()" class="bg-white/5 border border-white/10 text-xs font-semibold text-gray-300 rounded-xl px-4 py-2.5 focus:outline-none focus:border-skyxo-aqua">
+                        <option value="featured" class="bg-black">Sort by: Featured</option>
+                        <option value="price-low" class="bg-black">Price: Low to High</option>
+                        <option value="price-high" class="bg-black">Price: High to Low</option>
+                        <option value="rating" class="bg-black">Highest Rated</option>
+                        <option value="discount" class="bg-black">Biggest Discount</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Game Cards Grid -->
+            <div id="game-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- Dynamically Rendered via JS -->
+            </div>
+
+        </section>
+
+        <!-- DEALS SECTION -->
+        <section id="deals" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 w-full">
+            <div class="flex items-center justify-between mb-8">
+                <div>
+                    <span class="text-xs uppercase tracking-widest font-bold text-skyxo-champagne gold-glow">Special Offers</span>
+                    <h2 class="text-2xl sm:text-3xl font-black text-white tracking-tight">TODAY'S DEALS</h2>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- Deal Card 1 -->
+                <div class="glass-card p-6 flex flex-col justify-between relative overflow-hidden group">
+                    <div class="absolute -right-8 -top-8 w-24 h-24 bg-skyxo-champagne/10 rounded-full blur-2xl"></div>
+                    <div>
+                        <span class="text-3xl font-black text-skyxo-champagne">UP TO 40% OFF</span>
+                        <h3 class="text-lg font-bold text-white mt-2">WEEKEND DEALS</h3>
+                        <p class="text-xs text-gray-400 mt-2">Special promotional pricing on top action and open-world titles.</p>
+                    </div>
+                    <button onclick="filterByCategory('ALL')" class="mt-6 text-xs font-extrabold uppercase text-skyxo-aqua tracking-wider flex items-center gap-2 group-hover:translate-x-1 transition-transform">
+                        Explore Deals <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+
+                <!-- Deal Card 2 -->
+                <div class="glass-card p-6 flex flex-col justify-between relative overflow-hidden group">
+                    <div class="absolute -right-8 -top-8 w-24 h-24 bg-skyxo-aqua/10 rounded-full blur-2xl"></div>
+                    <div>
+                        <span class="text-3xl font-black text-skyxo-aqua">NEW ARRIVALS</span>
+                        <h3 class="text-lg font-bold text-white mt-2">FRESH DIGITAL KEYS</h3>
+                        <p class="text-xs text-gray-400 mt-2">Latest AAA releases and indie breakthroughs added daily.</p>
+                    </div>
+                    <button onclick="filterByCategory('ALL')" class="mt-6 text-xs font-extrabold uppercase text-skyxo-aqua tracking-wider flex items-center gap-2 group-hover:translate-x-1 transition-transform">
+                        Browse Catalog <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+
+                <!-- Deal Card 3 -->
+                <div class="glass-card p-6 flex flex-col justify-between relative overflow-hidden group">
+                    <div>
+                        <span class="text-3xl font-black text-white">UNDER ₹999</span>
+                        <h3 class="text-lg font-bold text-white mt-2">BUDGET GAMING</h3>
+                        <p class="text-xs text-gray-400 mt-2">Premium experiences without breaking the bank.</p>
+                    </div>
+                    <button onclick="filterUnder999()" class="mt-6 text-xs font-extrabold uppercase text-skyxo-aqua tracking-wider flex items-center gap-2 group-hover:translate-x-1 transition-transform">
+                        View Games <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+
+                <!-- Deal Card 4 -->
+                <div class="glass-card p-6 flex flex-col justify-between relative overflow-hidden group">
+                    <div>
+                        <span class="text-3xl font-black text-skyxo-champagne">LIMITED TIME</span>
+                        <h3 class="text-lg font-bold text-white mt-2">PUBLISHER SPOTLIGHT</h3>
+                        <p class="text-xs text-gray-400 mt-2">Curated selection from world-renowned game studios.</p>
+                    </div>
+                    <button onclick="filterByCategory('STEAM')" class="mt-6 text-xs font-extrabold uppercase text-skyxo-aqua tracking-wider flex items-center gap-2 group-hover:translate-x-1 transition-transform">
+                        View Publisher <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- COLLECTIONS SECTION -->
+        <section id="collections" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 w-full">
+            <div class="mb-8">
+                <span class="text-xs uppercase tracking-widest font-bold text-skyxo-aqua">Handpicked</span>
+                <h2 class="text-2xl sm:text-3xl font-black text-white tracking-tight">EDITOR'S PICKS</h2>
+            </div>
+
+            <div id="collections-grid" class="flex gap-6 overflow-x-auto no-scrollbar pb-4">
+                <!-- Dynamically rendered horizontal cards -->
+            </div>
+        </section>
+
+        <!-- DOMAINS MARKETPLACE SECTION -->
+        <section id="domains" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 w-full">
+            <div class="glass-card p-8 sm:p-12 relative overflow-hidden">
+                <div class="max-w-2xl">
+                    <span class="text-xs uppercase tracking-widest font-bold text-skyxo-champagne gold-glow">Digital Identity</span>
+                    <h2 class="text-3xl sm:text-4xl font-black text-white tracking-tight mt-1 mb-2">DOMAINS</h2>
+                    <p class="text-xs sm:text-sm text-gray-300 mb-8">BUILD YOUR DIGITAL PRESENCE. Secure premium gaming and esports domain names.</p>
+
+                    <!-- Domain Availability Simulator Input -->
+                    <div class="flex flex-col sm:flex-row gap-3 mb-8">
+                        <input id="domain-search-input" type="text" placeholder="Enter your domain (e.g. playverse.gg)" class="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-skyxo-aqua">
+                        <button onclick="checkDomainAvailability()" class="px-6 py-3 bg-skyxo-aqua text-black font-bold text-xs uppercase tracking-wider rounded-xl hover:bg-emerald-400 transition-all">
+                            Check Availability
+                        </button>
+                    </div>
+
+                    <div id="domain-result" class="hidden p-4 rounded-xl bg-white/5 border border-white/10 mb-8 text-xs font-mono"></div>
+
+                    <!-- Sample Domains List -->
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div class="p-4 rounded-2xl bg-white/5 border border-white/5 flex flex-col justify-between">
+                            <span class="text-lg font-bold text-white">skyxo.gg</span>
+                            <div class="flex items-center justify-between mt-4">
+                                <span class="text-xs text-skyxo-champagne font-bold">₹1,499/yr</span>
+                                <button onclick="buyDomain('skyxo.gg', 1499)" class="text-[10px] font-bold uppercase tracking-wider text-black bg-white px-3 py-1.5 rounded-lg hover:bg-skyxo-aqua transition-colors">Claim</button>
+                            </div>
+                        </div>
+
+                        <div class="p-4 rounded-2xl bg-white/5 border border-white/5 flex flex-col justify-between">
+                            <span class="text-lg font-bold text-white">playverse.gg</span>
+                            <div class="flex items-center justify-between mt-4">
+                                <span class="text-xs text-skyxo-champagne font-bold">₹1,299/yr</span>
+                                <button onclick="buyDomain('playverse.gg', 1299)" class="text-[10px] font-bold uppercase tracking-wider text-black bg-white px-3 py-1.5 rounded-lg hover:bg-skyxo-aqua transition-colors">Claim</button>
+                            </div>
+                        </div>
+
+                        <div class="p-4 rounded-2xl bg-white/5 border border-white/5 flex flex-col justify-between">
+                            <span class="text-lg font-bold text-white">gamora.in</span>
+                            <div class="flex items-center justify-between mt-4">
+                                <span class="text-xs text-skyxo-champagne font-bold">₹999/yr</span>
+                                <button onclick="buyDomain('gamora.in', 999)" class="text-[10px] font-bold uppercase tracking-wider text-black bg-white px-3 py-1.5 rounded-lg hover:bg-skyxo-aqua transition-colors">Claim</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TRUST & VALUE PROPOSITION SECTION -->
+        <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 w-full">
+            <div class="text-center max-w-xl mx-auto mb-12">
+                <h2 class="text-2xl sm:text-3xl font-black text-white tracking-tight">WHY SKYXOSTORE?</h2>
+                <p class="text-xs text-skyxo-textMuted mt-2">Elevating digital game commerce with unmatched reliability</p>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="glass-card p-6 text-center">
+                    <div class="w-12 h-12 rounded-2xl bg-skyxo-aqua/10 text-skyxo-aqua mx-auto flex items-center justify-center text-xl mb-4 border border-skyxo-aqua/20">
+                        <i class="fa-solid fa-shield-halved"></i>
+                    </div>
+                    <h3 class="text-base font-bold text-white mb-2">VERIFIED PRODUCTS</h3>
+                    <p class="text-xs text-gray-400">Transparent product information and official key distribution guarantees.</p>
+                </div>
+
+                <div class="glass-card p-6 text-center">
+                    <div class="w-12 h-12 rounded-2xl bg-skyxo-aqua/10 text-skyxo-aqua mx-auto flex items-center justify-center text-xl mb-4 border border-skyxo-aqua/20">
+                        <i class="fa-solid fa-lock"></i>
+                    </div>
+                    <h3 class="text-base font-bold text-white mb-2">SECURE EXPERIENCE</h3>
+                    <p class="text-xs text-gray-400">Built around a secure and reliable shopping experience for players worldwide.</p>
+                </div>
+
+                <div class="glass-card p-6 text-center">
+                    <div class="w-12 h-12 rounded-2xl bg-skyxo-aqua/10 text-skyxo-aqua mx-auto flex items-center justify-center text-xl mb-4 border border-skyxo-aqua/20">
+                        <i class="fa-solid fa-gem"></i>
+                    </div>
+                    <h3 class="text-base font-bold text-white mb-2">CURATED COLLECTION</h3>
+                    <p class="text-xs text-gray-400">A focused catalog instead of endless clutter. Only quality titles make the cut.</p>
+                </div>
+
+                <div class="glass-card p-6 text-center">
+                    <div class="w-12 h-12 rounded-2xl bg-skyxo-aqua/10 text-skyxo-aqua mx-auto flex items-center justify-center text-xl mb-4 border border-skyxo-aqua/20">
+                        <i class="fa-solid fa-bolt"></i>
+                    </div>
+                    <h3 class="text-base font-bold text-white mb-2">FAST DIGITAL ACCESS</h3>
+                    <p class="text-xs text-gray-400">Designed for a smooth digital purchasing experience with instant code activation.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- FOOTER -->
+        <footer class="mt-auto border-t border-white/5 bg-[#0A1112]/50 backdrop-blur-lg">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+                <div class="grid grid-cols-1 md:grid-cols-5 gap-10">
+                    
+                    <div class="md:col-span-2">
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="w-8 h-8 rounded-lg bg-skyxo-dark border border-skyxo-aqua/30 flex items-center justify-center font-black text-skyxo-aqua text-sm">
+                                S
+                            </div>
+                            <span class="text-base font-black tracking-wider text-white">SKYXO<span class="text-skyxo-aqua font-light">STORE</span></span>
+                        </div>
+                        <p class="text-xs text-gray-400 max-w-sm mb-6">
+                            Your next game starts here. SkyxoStore is envisioned as a premium digital marketplace built around discovering and acquiring games effortlessly.
+                        </p>
+                        <div class="flex items-center gap-4 text-gray-400">
+                            <a href="#" class="hover:text-skyxo-aqua text-sm"><i class="fa-brands fa-discord"></i></a>
+                            <a href="#" class="hover:text-skyxo-aqua text-sm"><i class="fa-brands fa-x-twitter"></i></a>
+                            <a href="#" class="hover:text-skyxo-aqua text-sm"><i class="fa-brands fa-instagram"></i></a>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h4 class="text-xs font-bold uppercase tracking-wider text-white mb-4">Shop</h4>
+                        <ul class="space-y-2 text-xs text-gray-400">
+                            <li><a href="#games" class="hover:text-white transition-colors">Games Catalogue</a></li>
+                            <li><a href="#deals" class="hover:text-white transition-colors">Today's Deals</a></li>
+                            <li><a href="#collections" class="hover:text-white transition-colors">Curated Collections</a></li>
+                            <li><a href="#domains" class="hover:text-white transition-colors">Domains Marketplace</a></li>
+                        </ul>
+                    </div>
+
+                    <div>
+                        <h4 class="text-xs font-bold uppercase tracking-wider text-white mb-4">Company</h4>
+                        <ul class="space-y-2 text-xs text-gray-400">
+                            <li><button onclick="openModal('about-modal')" class="hover:text-white transition-colors">About Us</button></li>
+                            <li><button onclick="openModal('contact-modal')" class="hover:text-white transition-colors">Contact Support</button></li>
+                            <li><button onclick="openModal('terms-modal')" class="hover:text-white transition-colors">Terms of Service</button></li>
+                            <li><button onclick="openModal('privacy-modal')" class="hover:text-white transition-colors">Privacy Policy</button></li>
+                        </ul>
+                    </div>
+
+                    <div>
+                        <h4 class="text-xs font-bold uppercase tracking-wider text-white mb-4">Support</h4>
+                        <ul class="space-y-2 text-xs text-gray-400">
+                            <li><a href="#" onclick="alert('Help Center article modal simulator loaded.')" class="hover:text-white transition-colors">Help Center</a></li>
+                            <li><a href="#" onclick="alert('Digital Activation guide simulator loaded.')" class="hover:text-white transition-colors">Key Activation</a></li>
+                            <li><button onclick="openModal('contact-modal')" class="hover:text-white transition-colors">System Status</button></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="mt-12 pt-8 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between text-[11px] text-gray-500 gap-4">
+                    <p>© 2026 SkyxoStore. All rights reserved. Interactive Frontend Showcase Demo.</p>
+                    <div class="flex gap-6">
+                        <button onclick="openModal('terms-modal')" class="hover:text-gray-300">Terms</button>
+                        <button onclick="openModal('privacy-modal')" class="hover:text-gray-300">Privacy</button>
+                        <button onclick="openModal('terms-modal')" class="hover:text-gray-300">Refund Policy</button>
+                    </div>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- CART DRAWER -->
+    <div id="cart-drawer" class="fixed inset-y-0 right-0 z-[80] w-full max-w-md bg-[#0A1112] border-l border-white/10 shadow-2xl transform translate-x-full transition-transform duration-300 flex flex-col">
+        <div class="p-6 border-b border-white/10 flex items-center justify-between">
+            <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                <i class="fa-solid fa-bag-shopping text-skyxo-aqua"></i> Shopping Cart
+            </h3>
+            <button onclick="toggleCartDrawer()" class="text-gray-400 hover:text-white">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+        </div>
+
+        <div id="cart-items" class="flex-1 overflow-y-auto p-6 space-y-4">
+            <!-- Dynamically Populated -->
+        </div>
+
+        <div class="p-6 border-t border-white/10 bg-black/40 space-y-3">
+            <div class="flex justify-between text-xs text-gray-400">
+                <span>Subtotal</span>
+                <span id="cart-subtotal" class="font-bold text-white">₹0</span>
+            </div>
+            <div class="flex justify-between text-xs text-gray-400">
+                <span>Estimated Discount</span>
+                <span id="cart-discount" class="font-bold text-skyxo-aqua">-₹0</span>
+            </div>
+            <div class="flex justify-between text-sm text-white font-bold pt-2 border-t border-white/5">
+                <span>Total</span>
+                <span id="cart-total" class="text-skyxo-champagne text-lg">₹0</span>
+            </div>
+
+            <button onclick="openCheckoutModal()" class="w-full py-3.5 bg-skyxo-aqua text-black font-extrabold text-xs uppercase tracking-wider rounded-xl hover:bg-emerald-400 transition-all mt-4">
+                Proceed To Checkout
+            </button>
+        </div>
+    </div>
+
+    <!-- WISHLIST DRAWER -->
+    <div id="wishlist-drawer" class="fixed inset-y-0 right-0 z-[80] w-full max-w-md bg-[#0A1112] border-l border-white/10 shadow-2xl transform translate-x-full transition-transform duration-300 flex flex-col">
+        <div class="p-6 border-b border-white/10 flex items-center justify-between">
+            <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                <i class="fa-solid fa-heart text-skyxo-champagne"></i> Wishlist
+            </h3>
+            <button onclick="toggleWishlistDrawer()" class="text-gray-400 hover:text-white">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+        </div>
+
+        <div id="wishlist-items" class="flex-1 overflow-y-auto p-6 space-y-4">
+            <!-- Dynamically Populated -->
+        </div>
+    </div>
+
+    <!-- SEARCH MODAL -->
+    <div id="search-modal" class="fixed inset-0 z-[90] bg-black/80 backdrop-blur-md flex items-start justify-center pt-20 px-4 hidden">
+        <div class="max-w-2xl w-full glass-card p-6 border border-white/10 relative">
+            <button onclick="toggleSearchModal()" class="absolute top-6 right-6 text-gray-400 hover:text-white">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+            <div class="relative mb-6">
+                <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+                <input id="search-input" onkeyup="handleSearchInput()" type="text" placeholder="Search games, genres, platforms (e.g. Cyberfall, Steam, RPG)..." class="w-full bg-white/5 border border-white/10 rounded-2xl pl-12 pr-4 py-4 text-sm text-white focus:outline-none focus:border-skyxo-aqua">
+            </div>
+
+            <div id="search-results" class="max-h-80 overflow-y-auto space-y-3">
+                <div class="text-center py-8 text-xs text-skyxo-textMuted">Type a keyword above to search sample marketplace catalog.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- GAME DETAIL MODAL -->
+    <div id="game-detail-modal" class="fixed inset-0 z-[95] bg-black/85 backdrop-blur-lg flex items-center justify-center p-4 sm:p-6 overflow-y-auto hidden">
+        <div id="game-detail-content" class="max-w-4xl w-full glass-card border border-white/10 rounded-3xl overflow-hidden relative max-h-[90vh] flex flex-col my-auto">
+            <!-- Content Injected via JS -->
+        </div>
+    </div>
+
+    <!-- SIMULATED CHECKOUT MODAL -->
+    <div id="checkout-modal" class="fixed inset-0 z-[100] bg-black/90 backdrop-blur-md flex items-center justify-center p-4 hidden">
+        <div class="max-w-md w-full glass-card p-6 border border-white/10 relative">
+            <button onclick="closeModal('checkout-modal')" class="absolute top-6 right-6 text-gray-400 hover:text-white">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+            
+            <div id="checkout-step-1">
+                <h3 class="text-xl font-bold text-white mb-1">Simulated Checkout</h3>
+                <p class="text-xs text-skyxo-textMuted mb-6">SkyxoStore Digital Delivery Demo</p>
+
+                <div class="space-y-4 mb-6">
+                    <div>
+                        <label class="block text-[11px] font-semibold text-gray-300 uppercase mb-1">Email Address for Key Delivery</label>
+                        <input type="email" value="player@skyxo.gg" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-semibold text-gray-300 uppercase mb-1">Payment Method</label>
+                        <select class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white">
+                            <option class="bg-black">Instant UPI / Credit Card (Demo)</option>
+                            <option class="bg-black">Crypto / Web3 Wallet (Demo)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="p-4 rounded-xl bg-skyxo-dark border border-white/5 mb-6 text-xs space-y-2">
+                    <div class="flex justify-between text-gray-400"><span>Items</span><span id="checkout-summary-count">0</span></div>
+                    <div class="flex justify-between font-bold text-white"><span>Total Amount</span><span id="checkout-summary-total" class="text-skyxo-aqua">₹0</span></div>
+                </div>
+
+                <button onclick="completeCheckout()" class="w-full py-3.5 bg-skyxo-aqua text-black font-extrabold text-xs uppercase tracking-wider rounded-xl hover:bg-emerald-400 transition-all">
+                    Complete Order (Simulated)
+                </button>
+            </div>
+
+            <div id="checkout-step-success" class="hidden text-center py-6">
+                <div class="w-16 h-16 rounded-full bg-skyxo-aqua/20 text-skyxo-aqua border border-skyxo-aqua/30 flex items-center justify-center text-2xl mx-auto mb-4">
+                    <i class="fa-solid fa-check"></i>
+                </div>
+                <h3 class="text-2xl font-bold text-white mb-2">Order Confirmed!</h3>
+                <p class="text-xs text-gray-300 mb-6">Your digital game activation keys have been delivered to your demo account library.</p>
+                <div class="p-3 bg-white/5 rounded-xl font-mono text-[11px] text-skyxo-champagne mb-6 select-all">
+                    SKYXO-DEMO-KEY-8829-X992
+                </div>
+                <button onclick="closeModal('checkout-modal')" class="w-full py-3 bg-white text-black font-bold text-xs uppercase tracking-wider rounded-xl">
+                    Back to Store
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ACCOUNT MODAL -->
+    <div id="account-modal" class="fixed inset-0 z-[90] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 hidden">
+        <div class="max-w-md w-full glass-card p-6 border border-white/10 relative">
+            <button onclick="closeModal('account-modal')" class="absolute top-6 right-6 text-gray-400 hover:text-white">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+            <div class="text-center mb-6">
+                <div class="w-16 h-16 rounded-2xl bg-skyxo-aqua/10 border border-skyxo-aqua/30 mx-auto flex items-center justify-center text-skyxo-aqua text-2xl font-bold mb-3">
+                    S
+                </div>
+                <h3 class="text-xl font-bold text-white">Demo Account</h3>
+                <p class="text-xs text-skyxo-textMuted">Pro Member • Level 42</p>
+            </div>
+            <div class="space-y-3 text-xs">
+                <div class="p-3 rounded-xl bg-white/5 flex justify-between items-center text-gray-300">
+                    <span>Library Games</span> <span class="font-bold text-white">14 Titles</span>
+                </div>
+                <div class="p-3 rounded-xl bg-white/5 flex justify-between items-center text-gray-300"><span>Store Credit</span> <span class="font-bold text-skyxo-champagne">₹1,500</span></div>
+            </div>
+            <button onclick="closeModal('account-modal')" class="w-full py-3 mt-6 bg-white/10 text-white font-bold text-xs uppercase tracking-wider rounded-xl hover:bg-white/20">Close Profile</button>
+        </div>
+    </div>
+
+    <!-- LEGAL MODALS (About, Terms, Privacy, Contact) -->
+    <div id="about-modal" class="fixed inset-0 z-[90] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 hidden">
+        <div class="max-w-lg w-full glass-card p-6 border border-white/10 relative">
+            <button onclick="closeModal('about-modal')" class="absolute top-6 right-6 text-gray-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+            <h3 class="text-xl font-bold text-white mb-3">ABOUT SKYXOSTORE</h3>
+            <p class="text-xs text-gray-300 leading-relaxed">SkyxoStore is envisioned as a premium digital marketplace built around discovering, purchasing, and managing games and digital products through a clean, modern experience.</p>
+        </div>
+    </div>
+
+    <div id="terms-modal" class="fixed inset-0 z-[90] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 hidden">
+        <div class="max-w-lg w-full glass-card p-6 border border-white/10 relative max-h-[80vh] overflow-y-auto">
+            <button onclick="closeModal('terms-modal')" class="absolute top-6 right-6 text-gray-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+            <h3 class="text-xl font-bold text-white mb-3">TERMS OF SERVICE (DEMO)</h3>
+            <div class="text-xs text-gray-300 space-y-3">
+                <p><strong>1. Acceptance of Terms:</strong> This web application is a frontend demonstration of SkyxoStore platform concepts.</p>
+                <p><strong>2. Digital Products:</strong> Product images, titles, and pricing displayed are sample content for preview purposes.</p>
+                <p><strong>3. Transactions:</strong> No actual financial transactions or payment processing are conducted on this demo site.</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="privacy-modal" class="fixed inset-0 z-[90] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 hidden">
+        <div class="max-w-lg w-full glass-card p-6 border border-white/10 relative">
+            <button onclick="closeModal('privacy-modal')" class="absolute top-6 right-6 text-gray-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+            <h3 class="text-xl font-bold text-white mb-3">PRIVACY POLICY (DEMO)</h3>
+            <p class="text-xs text-gray-300 leading-relaxed">This demonstration application does not collect, store, or sell personal user data to external servers. All shopping cart states remain local to your current browser session.</p>
+        </div>
+    </div>
+
+    <div id="contact-modal" class="fixed inset-0 z-[90] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 hidden">
+        <div class="max-w-lg w-full glass-card p-6 border border-white/10 relative">
+            <button onclick="closeModal('contact-modal')" class="absolute top-6 right-6 text-gray-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+            <h3 class="text-xl font-bold text-white mb-3">CONTACT SUPPORT</h3>
+            <p class="text-xs text-gray-300 mb-4">Have questions regarding the SkyxoStore digital platform architecture?</p>
+            <input type="text" placeholder="Your Message" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-xs text-white mb-4">
+            <button onclick="alert('Message sent (Simulator)'); closeModal('contact-modal')" class="w-full py-3 bg-skyxo-aqua text-black font-bold text-xs uppercase tracking-wider rounded-xl">Send Message</button>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT APP LOGIC -->
+    <script>
+        // SAMPLE GAME DATABASE
+        const GAMES_DATA = [
+            { id: 0, title: "Cyberfall", category: "PC", price: 2499, originalPrice: 3499, rating: 4.9, image: "https://images.unsplash.com/photo-1511512578047-dfb367046420?q=80&w=800&auto=format&fit=crop", genre: "Action RPG", platform: "PC / Steam", editorPick: true },
+            { id: 1, title: "Shadow Protocol", category: "STEAM", price: 1799, originalPrice: 2299, rating: 4.7, image: "https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=800&auto=format&fit=crop", genre: "Stealth Action", platform: "Steam", editorPick: true },
+            { id: 2, title: "Neon District", category: "PC", price: 999, originalPrice: 1499, rating: 4.5, image: "https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=800&auto=format&fit=crop", genre: "Cyberpunk Strategy", platform: "PC", editorPick: false },
+            { id: 3, title: "Kingdoms Beyond", category: "SANDBOX", price: 2199, originalPrice: 2799, rating: 4.8, image: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=800&auto=format&fit=crop", genre: "Fantasy Open World", platform: "PC / Xbox", editorPick: true },
+            { id: 4, title: "Riftborn", category: "XBOX", price: 1499, originalPrice: 1999, rating: 4.6, image: "https://images.unsplash.com/photo-1538481199705-c710c4e965fc?q=80&w=800&auto=format&fit=crop", genre: "Sci-Fi Shooter", platform: "Xbox Series X", editorPick: false },
+            { id: 5, title: "Velocity Zero", category: "PS", price: 899, originalPrice: 1299, rating: 4.4, image: "https://images.unsplash.com/photo-1511882150382-421056c89033?q=80&w=800&auto=format&fit=crop", genre: "Futuristic Racing", platform: "PS5", editorPick: false },
+            { id: 6, title: "Iron Dominion", category: "STEAM", price: 1699, originalPrice: 2199, rating: 4.7, image: "https://images.unsplash.com/photo-1579373903781-fd5c0c30c4cd?q=80&w=800&auto=format&fit=crop", genre: "RTS War", platform: "Steam", editorPick: true },
+            { id: 7, title: "Starbound Legacy", category: "PC", price: 2799, originalPrice: 3299, rating: 4.9, image: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=800&auto=format&fit=crop", genre: "Space Exploration", platform: "PC", editorPick: false },
+            { id: 8, title: "Apex Horizon", category: "XBOX", price: 2999, originalPrice: 3999, rating: 4.8, image: "https://images.unsplash.com/photo-1563089145-599997674d42?q=80&w=800&auto=format&fit=crop", genre: "Racing Simulator", platform: "Xbox Series X", editorPick: true },
+            { id: 9, title: "Elden Reign", category: "PS", price: 3499, originalPrice: 4299, rating: 5.0, image: "https://images.unsplash.com/photo-1511512578047-dfb367046420?q=80&w=800&auto=format&fit=crop", genre: "Dark Fantasy Action", platform: "PS5", editorPick: true },
+            { id: 10, title: "Ghost of Tsushima", category: "PS", price: 2499, originalPrice: 2999, rating: 4.9, image: "https://images.unsplash.com/photo-1579373903781-fd5c0c30c4cd?q=80&w=800&auto=format&fit=crop", genre: "Samurai Adventure", platform: "PS5 / PC", editorPick: true },
+            { id: 11, title: "Cyberpunk Phantom", category: "PC", price: 2199, originalPrice: 2999, rating: 4.7, image: "https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=800&auto=format&fit=crop", genre: "Sci-Fi RPG", platform: "PC / Steam", editorPick: false },
+            { id: 12, title: "Horizon West", category: "PS", price: 2899, originalPrice: 3499, rating: 4.8, image: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=800&auto=format&fit=crop", genre: "Action Adventure", platform: "PS5", editorPick: false },
+            { id: 13, title: "Sandbox Universe", category: "SANDBOX", price: 799, originalPrice: 1199, rating: 4.5, image: "https://images.unsplash.com/photo-1538481199705-c710c4e965fc?q=80&w=800&auto=format&fit=crop", genre: "Creativity Sandbox", platform: "PC", editorPick: false },
+            { id: 14, title: "Hogwarts Legacy", category: "STEAM", price: 2699, originalPrice: 3299, rating: 4.8, image: "https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=800&auto=format&fit=crop", genre: "Magic Action RPG", platform: "Steam", editorPick: false },
+            { id: 15, title: "Red Dead Redemption 2", category: "PC", price: 1599, originalPrice: 2999, rating: 5.0, image: "https://images.unsplash.com/photo-1511882150382-421056c89033?q=80&w=800&auto=format&fit=crop", genre: "Open World Western", platform: "PC", editorPick: true }
+        ];
+
+        let cart = [];
+        let wishlist = [];
+        let currentFilter = 'ALL';
+
+        // THREE.JS 3D ENTRY SCENE
+        let scene, camera, renderer, monogramGroup;
+        function init3DIntro() {
+            const canvas = document.getElementById('three-canvas');
+            scene = new THREE.Scene();
+            scene.fog = new THREE.FogExp2(0x050607, 0.03);
+
+            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.z = 15;
+
+            renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+            // Floating Monogram Object Construction
+            monogramGroup = new THREE.Group();
+
+            const geometry = new THREE.IcosahedronGeometry(3.5, 0);
+            const material = new THREE.MeshPhysicalMaterial({
+                color: 0x0A1112,
+                metalness: 0.9,
+                roughness: 0.2,
+                clearcoat: 1.0,
+                clearcoatRoughness: 0.1,
+                wireframe: true
+            });
+            const mesh = new THREE.Mesh(geometry, material);
+            monogramGroup.add(mesh);
+
+            const innerGeo = new THREE.OctahedronGeometry(2, 0);
+            const innerMat = new THREE.MeshStandardMaterial({
+                color: 0x2CDA9D,
+                emissive: 0x1A6852,
+                roughness: 0.3
+            });
+            const innerMesh = new THREE.Mesh(innerGeo, innerMat);
+            monogramGroup.add(innerMesh);
+
+            scene.add(monogramGroup);
+
+            // Floating Particles
+            const particleGeo = new THREE.BufferGeometry();
+            const count = 300;
+            const posArray = new Float32Array(count * 3);
+            for (let i = 0; i < count * 3; i++) {
+                posArray[i] = (Math.random() - 0.5) * 40;
+            }
+            particleGeo.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+            const particleMat = new THREE.PointsMaterial({
+                size: 0.08,
+                color: 0xDFBA73,
+                transparent: true,
+                opacity: 0.6
+            });
+            const particles = new THREE.Points(particleGeo, particleMat);
+            scene.add(particles);
+
+            // Lighting
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+            scene.add(ambientLight);
+
+            const dirLight1 = new THREE.DirectionalLight(0x2CDA9D, 1.5);
+            dirLight1.position.set(5, 10, 7);
+            scene.add(dirLight1);
+
+            const dirLight2 = new THREE.DirectionalLight(0xDFBA73, 1.2);
+            dirLight2.position.set(-5, -5, -5);
+            scene.add(dirLight2);
+
+            function animate3D() {
+                requestAnimationFrame(animate3D);
+                monogramGroup.rotation.y += 0.008;
+                monogramGroup.rotation.x += 0.004;
+                particles.rotation.y -= 0.001;
+                renderer.render(scene, camera);
+            }
+            animate3D();
+
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
+        }
+
+        // DYNAMIC LOADING SEQUENCE
+        const loadingSteps = [
+            { text: "INITIALIZING SKYXOSTORE", progress: 15 },
+            { text: "INITIALIZING LIBRARY", progress: 35 },
+            { text: "LOADING COLLECTION", progress: 55 },
+            { text: "PREPARING MARKETPLACE", progress: 75 },
+            { text: "CURATING DEALS", progress: 90 },
+            { text: "WELCOME TO SKYXOSTORE", progress: 100 }
+        ];
+
+        function runLoadingSequence() {
+            let currentStep = 0;
+            const interval = setInterval(() => {
+                if (currentStep < loadingSteps.length) {
+                    const step = loadingSteps[currentStep];
+                    document.getElementById('loading-status').innerText = step.text;
+                    document.getElementById('progress-bar').style.width = step.progress + '%';
+                    document.getElementById('progress-text').innerText = step.progress + '%';
+                    currentStep++;
+                } else {
+                    clearInterval(interval);
+                    setTimeout(() => {
+                        finishIntro();
+                    }, 500);
+                }
+            }, 600);
+        }
+
+        function finishIntro() {
+            const intro = document.getElementById('intro-container');
+            const main = document.getElementById('main-content');
+            intro.style.opacity = '0';
+            setTimeout(() => {
+                intro.style.display = 'none';
+                main.classList.remove('opacity-0');
+            }, 1000);
+        }
+
+        // RENDER CATALOGUE
+        function renderGames(gamesList) {
+            const grid = document.getElementById('game-grid');
+            grid.innerHTML = '';
+
+            if (gamesList.length === 0) {
+                grid.innerHTML = `<div class="col-span-full text-center py-12 text-skyxo-textMuted text-xs">No games found matching your criteria.</div>`;
+                return;
+            }
+
+            gamesList.forEach(game => {
+                const discount = Math.round(((game.originalPrice - game.price) / game.originalPrice) * 100);
+                const isWishlisted = wishlist.includes(game.id);
+
+                const cardHTML = `
+                    <div class="glass-card group flex flex-col justify-between overflow-hidden relative transition-all duration-300 hover:-translate-y-1">
+                        <div class="relative aspect-video overflow-hidden">
+                            <img src="${game.image}" alt="${game.title}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105">
+                            <div class="absolute inset-0 bg-gradient-to-t from-[#0D1517] via-transparent to-transparent"></div>
+                            
+                            <!-- Badges -->
+                            <div class="absolute top-3 left-3 flex gap-1.5">
+                                <span class="bg-black/60 backdrop-blur-md text-white text-[9px] font-bold px-2 py-0.5 rounded border border-white/10 uppercase">${game.category}</span>
+                            </div>
+
+                            <!-- Wishlist Toggle -->
+                            <button onclick="toggleWishlist(${game.id})" class="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/60 backdrop-blur-md border border-white/10 flex items-center justify-center text-xs ${isWishlisted ? 'text-red-500' : 'text-gray-300'} hover:scale-110 transition-transform">
+                                <i class="fa-${isWishlisted ? 'solid' : 'regular'} fa-heart"></i>
+                            </button>
+                        </div>
+
+                        <div class="p-5 flex-1 flex flex-col justify-between">
+                            <div>
+                                <div class="flex items-center justify-between text-[11px] text-skyxo-textMuted mb-1">
+                                    <span>${game.genre}</span>
+                                    <span class="text-skyxo-champagne font-semibold"><i class="fa-solid fa-star text-[10px]"></i> ${game.rating}</span>
+                                </div>
+                                <h3 class="text-base font-extrabold text-white group-hover:text-skyxo-aqua transition-colors line-clamp-1">${game.title}</h3>
+                            </div>
+
+                            <div class="mt-4 pt-4 border-t border-white/5 flex items-center justify-between">
+                                <div>
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-lg font-black text-white">₹${game.price.toLocaleString()}</span>
+                                        <span class="text-xs text-skyxo-aqua font-bold bg-skyxo-aqua/10 px-1.5 py-0.5 rounded">-${discount}%</span>
+                                    </div>
+                                    <span class="text-[10px] text-gray-500 line-through">₹${game.originalPrice.toLocaleString()}</span>
+                                </div>
+
+                                <div class="flex items-center gap-2">
+                                    <button onclick="openGameDetail(${game.id})" class="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white transition-colors" title="Quick View">
+                                        <i class="fa-solid fa-eye text-xs"></i>
+                                    </button>
+                                    <button onclick="addToCart(${game.id})" class="p-2.5 rounded-xl bg-skyxo-aqua text-black hover:bg-emerald-400 font-bold transition-colors" title="Add to Cart">
+                                        <i class="fa-solid fa-cart-plus text-xs"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                grid.innerHTML += cardHTML;
+            });
+        }
+
+        // CATEGORY FILTERING
+        function filterByCategory(cat) {
+            currentFilter = cat;
+            document.querySelectorAll('.category-btn').forEach(btn => {
+                btn.classList.remove('border-skyxo-aqua', 'bg-skyxo-aqua/10', 'text-skyxo-aqua');
+                btn.classList.add('border-white/10', 'bg-white/5', 'text-gray-300');
+            });
+            event.currentTarget.classList.remove('border-white/10', 'bg-white/5', 'text-gray-300');
+            event.currentTarget.classList.add('border-skyxo-aqua', 'bg-skyxo-aqua/10', 'text-skyxo-aqua');
+
+            applySortAndFilter();
+        }
+
+        function filterUnder999() {
+            const filtered = GAMES_DATA.filter(g => g.price < 1000);
+            renderGames(filtered);
+            document.getElementById('games').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function applySortAndFilter() {
+            let result = currentFilter === 'ALL' ? [...GAMES_DATA] : GAMES_DATA.filter(g => g.category === currentFilter);
+            const sortVal = document.getElementById('sort-select').value;
+
+            if (sortVal === 'price-low') result.sort((a,b) => a.price - b.price);
+            if (sortVal === 'price-high') result.sort((a,b) => b.price - a.price);
+            if (sortVal === 'rating') result.sort((a,b) => b.rating - a.rating);
+            if (sortVal === 'discount') result.sort((a,b) => ((b.originalPrice-b.price)/b.originalPrice) - ((a.originalPrice-a.price)/a.originalPrice));
+
+            renderGames(result);
+        }
+
+        // RENDER COLLECTIONS
+        function renderCollections() {
+            const container = document.getElementById('collections-grid');
+            const picks = GAMES_DATA.filter(g => g.editorPick);
+
+            picks.forEach(game => {
+                container.innerHTML += `
+                    <div onclick="openGameDetail(${game.id})" class="w-72 shrink-0 glass-card p-4 group cursor-pointer border border-white/5 hover:border-skyxo-aqua/40 transition-all">
+                        <div class="aspect-video rounded-xl overflow-hidden mb-3">
+                            <img src="${game.image}" alt="${game.title}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                        </div>
+                        <span class="text-[10px] font-bold text-skyxo-champagne uppercase">${game.platform}</span>
+                        <h4 class="text-sm font-extrabold text-white group-hover:text-skyxo-aqua transition-colors line-clamp-1">${game.title}</h4>
+                        <div class="flex items-center justify-between mt-2">
+                            <span class="text-xs font-black text-white">₹${game.price.toLocaleString()}</span>
+                            <span class="text-[10px] text-skyxo-textMuted font-bold">EDITOR PICK</span>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        // CART & WISHLIST LOGIC
+        function addToCart(gameId) {
+            const game = GAMES_DATA.find(g => g.id === gameId);
+            if (!cart.some(item => item.id === gameId)) {
+                cart.push({ ...game, qty: 1 });
+                updateCartUI();
+            }
+            toggleCartDrawer(true);
+        }
+
+        function removeFromCart(gameId) {
+            cart = cart.filter(item => item.id !== gameId);
+            updateCartUI();
+        }
+
+        function updateCartUI() {
+            const badge = document.getElementById('cart-badge');
+            const container = document.getElementById('cart-items');
+            
+            badge.innerText = cart.length;
+            if(cart.length > 0) badge.classList.remove('hidden'); else badge.classList.add('hidden');
+
+            container.innerHTML = '';
+            let subtotal = 0;
+            let discountTotal = 0;
+
+            if (cart.length === 0) {
+                container.innerHTML = `<div class="text-center py-12 text-xs text-skyxo-textMuted">Your shopping cart is currently empty.</div>`;
+            } else {
+                cart.forEach(item => {
+                    subtotal += item.originalPrice;
+                    discountTotal += (item.originalPrice - item.price);
+
+                    container.innerHTML += `
+                        <div class="p-3 rounded-2xl bg-white/5 border border-white/5 flex items-center gap-3">
+                            <img src="${item.image}" class="w-14 h-14 rounded-xl object-cover">
+                            <div class="flex-1">
+                                <h4 class="text-xs font-bold text-white line-clamp-1">${item.title}</h4>
+                                <span class="text-[10px] text-skyxo-textMuted">${item.platform}</span>
+                                <div class="text-xs font-extrabold text-skyxo-aqua mt-1">₹${item.price.toLocaleString()}</div>
+                            </div>
+                            <button onclick="removeFromCart(${item.id})" class="text-gray-500 hover:text-red-400 p-2">
+                                <i class="fa-solid fa-trash text-xs"></i>
+                            </button>
+                        </div>
+                    `;
+                });
+            }
+
+            const total = subtotal - discountTotal;
+            document.getElementById('cart-subtotal').innerText = `₹${subtotal.toLocaleString()}`;
+            document.getElementById('cart-discount').innerText = `-₹${discountTotal.toLocaleString()}`;
+            document.getElementById('cart-total').innerText = `₹${total.toLocaleString()}`;
+        }
+
+        function toggleWishlist(gameId) {
+            if (wishlist.includes(gameId)) {
+                wishlist = wishlist.filter(id => id !== gameId);
+            } else {
+                wishlist.push(gameId);
+            }
+            updateWishlistUI();
+            applySortAndFilter();
+        }
+
+        function updateWishlistUI() {
+            const badge = document.getElementById('wishlist-badge');
+            const container = document.getElementById('wishlist-items');
+            badge.innerText = wishlist.length;
+            if(wishlist.length > 0) badge.classList.remove('hidden'); else badge.classList.add('hidden');
+
+            container.innerHTML = '';
+            if (wishlist.length === 0) {
+                container.innerHTML = `<div class="text-center py-12 text-xs text-skyxo-textMuted">Your wishlist is empty.</div>`;
+            } else {
+                wishlist.forEach(id => {
+                    const item = GAMES_DATA.find(g => g.id === id);
+                    container.innerHTML += `
+                        <div class="p-3 rounded-2xl bg-white/5 border border-white/5 flex items-center justify-between">
+                            <div class="flex items-center gap-3">
+                                <img src="${item.image}" class="w-12 h-12 rounded-xl object-cover">
+                                <div>
+                                    <h4 class="text-xs font-bold text-white">${item.title}</h4>
+                                    <span class="text-xs text-skyxo-aqua">₹${item.price.toLocaleString()}</span>
+                                </div>
+                            </div>
+                            <button onclick="addToCart(${item.id})" class="px-3 py-1.5 bg-skyxo-aqua text-black text-[10px] font-bold rounded-lg uppercase">Add</button>
+                        </div>
+                    `;
+                });
+            }
+        }
+
+        // DRAWERS TOGGLES
+        function toggleCartDrawer(open) {
+            const drawer = document.getElementById('cart-drawer');
+            if(open || drawer.classList.contains('translate-x-full')) {
+                drawer.classList.remove('translate-x-full');
+            } else {
+                drawer.classList.add('translate-x-full');
+            }
+        }
+
+        function toggleWishlistDrawer() {
+            const drawer = document.getElementById('wishlist-drawer');
+            drawer.classList.toggle('translate-x-full');
+        }
+
+        function toggleSearchModal() {
+            const modal = document.getElementById('search-modal');
+            modal.classList.toggle('hidden');
+        }
+
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobile-menu');
+            menu.classList.toggle('hidden');
+        }
+
+        // SEARCH FUNCTIONALITY
+        function handleSearchInput() {
+            const query = document.getElementById('search-input').value.toLowerCase();
+            const resultsContainer = document.getElementById('search-results');
+            
+            if(!query) {
+                resultsContainer.innerHTML = `<div class="text-center py-8 text-xs text-skyxo-textMuted">Type a keyword above to search sample marketplace catalog.</div>`;
+                return;
+            }
+
+            const matches = GAMES_DATA.filter(g => 
+                g.title.toLowerCase().includes(query) || 
+                g.genre.toLowerCase().includes(query) || 
+                g.category.toLowerCase().includes(query)
+            );
+
+            resultsContainer.innerHTML = '';
+            if (matches.length === 0) {
+                resultsContainer.innerHTML = `<div class="text-center py-8 text-xs text-skyxo-textMuted">No matching games found.</div>`;
+            } else {
+                matches.forEach(game => {
+                    resultsContainer.innerHTML += `
+                        <div onclick="toggleSearchModal(); openGameDetail(${game.id})" class="p-3 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-between cursor-pointer transition-colors">
+                            <div class="flex items-center gap-3">
+                                <img src="${game.image}" class="w-12 h-12 rounded-lg object-cover">
+                                <div>
+                                    <h4 class="text-xs font-bold text-white">${game.title}</h4>
+                                    <span class="text-[10px] text-skyxo-textMuted">${game.platform} • ${game.genre}</span>
+                                </div>
+                            </div>
+                            <span class="text-xs font-extrabold text-skyxo-aqua">₹${game.price.toLocaleString()}</span>
+                        </div>
+                    `;
+                });
+            }
+        }
+
+        // GAME DETAIL MODAL
+        function openGameDetail(gameId) {
+            const game = GAMES_DATA.find(g => g.id === gameId);
+            const content = document.getElementById('game-detail-content');
+
+            content.innerHTML = `
+                <div class="relative h-64 sm:h-80 w-full overflow-hidden">
+                    <img src="${game.image}" class="w-full h-full object-cover">
+                    <div class="absolute inset-0 bg-gradient-to-t from-[#0D1517] via-[#0D1517]/50 to-transparent"></div>
+                    <button onclick="closeModal('game-detail-modal')" class="absolute top-6 right-6 w-10 h-10 rounded-full bg-black/60 border border-white/10 text-white flex items-center justify-center">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+
+                <div class="p-6 sm:p-8 flex-1 overflow-y-auto">
+                    <div class="flex flex-wrap items-center justify-between gap-4 mb-4">
+                        <div>
+                            <span class="text-xs font-bold text-skyxo-champagne uppercase">${game.platform} • ${game.genre}</span>
+                            <h2 class="text-2xl sm:text-4xl font-black text-white">${game.title}</h2>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-2xl font-black text-white">₹${game.price.toLocaleString()}</div>
+                            <span class="text-xs text-gray-400 line-through">₹${game.originalPrice.toLocaleString()}</span>
+                        </div>
+                    </div>
+
+                    <p class="text-xs sm:text-sm text-gray-300 leading-relaxed mb-6">
+                        Experience unrivaled gameplay performance and immersive storytelling with ${game.title}. Designed for modern gaming hardware with full digital key activation.
+                    </p>
+
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 rounded-2xl bg-white/5 border border-white/5 mb-6 text-xs">
+                        <div><span class="text-gray-500 block text-[10px]">Developer</span><span class="font-bold text-white">Skyxo Studios</span></div>
+                        <div><span class="text-gray-500 block text-[10px]">Rating</span><span class="font-bold text-skyxo-champagne">★ ${game.rating} / 5</span></div>
+                        <div><span class="text-gray-500 block text-[10px]">Delivery</span><span class="font-bold text-skyxo-aqua">Instant Key</span></div>
+                        <div><span class="text-gray-500 block text-[10px]">DRM</span><span class="font-bold text-white">Global Key</span></div>
+                    </div>
+
+                    <div class="flex gap-4">
+                        <button onclick="addToCart(${game.id}); closeModal('game-detail-modal')" class="flex-1 py-4 bg-skyxo-aqua text-black font-extrabold text-xs uppercase tracking-wider rounded-xl hover:bg-emerald-400 transition-all">
+                            Add To Cart
+                        </button>
+                        <button onclick="addToCart(${game.id}); closeModal('game-detail-modal'); openCheckoutModal()" class="flex-1 py-4 bg-white text-black font-extrabold text-xs uppercase tracking-wider rounded-xl hover:bg-gray-200 transition-all">
+                            Buy Now
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('game-detail-modal').classList.remove('hidden');
+        }
+
+        // DOMAIN SIMULATOR
+        function checkDomainAvailability() {
+            const input = document.getElementById('domain-search-input').value.trim();
+            const resultBox = document.getElementById('domain-result');
+            
+            if(!input) return;
+
+            resultBox.classList.remove('hidden');
+            resultBox.innerHTML = `
+                <div class="flex items-center justify-between">
+                    <span><strong class="text-white">${input}</strong> is <span class="text-skyxo-aqua font-bold">AVAILABLE</span> for registration.</span>
+                    <button onclick="buyDomain('${input}', 1299)" class="px-4 py-1.5 bg-skyxo-aqua text-black text-[10px] font-bold rounded-lg uppercase">Claim ₹1,299/yr</button>
+                </div>
+            `;
+        }
+
+        function buyDomain(domainName, price) {
+            cart.push({ id: Date.now(), title: `Domain: ${domainName}`, price: price, originalPrice: price, image: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=200&auto=format&fit=crop", platform: "DOMAIN" });
+            updateCartUI();
+            toggleCartDrawer(true);
+        }
+
+        // CHECKOUT & MODAL UTILITIES
+        function openCheckoutModal() {
+            toggleCartDrawer(false);
+            const total = cart.reduce((acc, curr) => acc + curr.price, 0);
+            document.getElementById('checkout-summary-count').innerText = cart.length;
+            document.getElementById('checkout-summary-total').innerText = `₹${total.toLocaleString()}`;
+            document.getElementById('checkout-step-1').classList.remove('hidden');
+            document.getElementById('checkout-step-success').classList.add('hidden');
+            document.getElementById('checkout-modal').classList.remove('hidden');
+        }
+
+        function completeCheckout() {
+            document.getElementById('checkout-step-1').classList.add('hidden');
+            document.getElementById('checkout-step-success').classList.remove('hidden');
+            cart = [];
+            updateCartUI();
+        }
+
+        function openModal(id) {
+            document.getElementById(id).classList.remove('hidden');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.add('hidden');
+        }
+
+        // WINDOW ONLOAD INITIALIZATION
+        window.onload = function() {
+            init3DIntro();
+            runLoadingSequence();
+            renderGames(GAMES_DATA);
+            renderCollections();
+        };
+    </script>
+</body>
+</html>
